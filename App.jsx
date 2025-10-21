@@ -1,207 +1,172 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Animated, 
-  Text, 
-  Easing, 
-  ActivityIndicator, 
-  ScrollView, 
-  Dimensions,  
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
 } from 'react-native';
-import LottieView from 'lottie-react-native';
-import {Modal , SlideAnimation , ModalPortal } from 'react-native-modals';
+import Animated, {
+  FadeInDown,
+  FadeInRight,
+  FadeInUp,
+  FadeOutLeft,
+  BounceIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  Easing,
+  BounceInDown,
+  BounceOut,
+  ZoomOut,
+  ZoomIn,
+} from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 
-export default function Animation() {
-  const images = [
-    require('./assets/src/ball.png'),
-    require('./assets/src/mic.png'),
-    require('./assets/src/mouse.png'),
-    require('./assets/src/bat.png'),
-    require('./assets/src/choclate.png'),
-  ];
+const Stack = createNativeStackNavigator();
 
-  const scaleAnim = useRef(new Animated.Value(1)).current; 
-  const [index, setIndex] = useState(0);
+const DATA = [
+  { id: '1', title: 'Item One', description: 'This is detail of Item One', colors: ['#2A7B9B', '#13547A'] },
+  { id: '2', title: 'Item Two', description: 'This is detail of Item Two', colors: ['#E67E22', '#F1C40F'] },
+  { id: '3', title: 'Item Three', description: 'This is detail of Item Three', colors: ['#8E44AD', '#3498DB'] },
+  { id: '4', title: 'Item Four', description: 'This is detail of Item Four', colors: ['#2ECC71', '#27AE60'] },
+  { id: '5', title: 'Item Five', description: 'This is detail of Item Five', colors: ['#E74C3C', '#C0392B'] },
+];
 
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  useEffect(() => {
-    const pulse = Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.15,
-        duration: 1200,
-        easing: Easing.inOut(Easing.sin),
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 1200,
-        easing: Easing.inOut(Easing.sin),
-        useNativeDriver: true,
-      }),
-    ]);
-    Animated.loop(pulse).start();
-
-    const interval = setInterval(() => {
-      setIndex(prev => (prev + 1) % images.length);
-    }, 800);
-
-    fetch('https://jsonplaceholder.typicode.com/users') 
-      .then(response => response.json())
-      .then(json => setData(json))
-      .catch(error => console.error(error))
-      .finally(() => setLoading(false));
-
-    return () => clearInterval(interval);
-  }, []);
-   
-  useEffect(() => {
-    const timer = setTimeout(() => {
-    console.log("Showing Modal")
-      setIsModalVisible(true);
-    }, 5000); 
-    return () => clearTimeout(timer);
-  }, []);
-
+const ListScreen = ({ navigation }) => {
+  const getItemStyle = (index) => {
+    switch (index) {
+      case 0:
+        return { height: 180, width: 180 };
+      case 1:
+        return { height: 170, width: 150 };
+      default:
+        return { height: 180 };
+    }
+  };
 
   return (
-    <View style={styles.appContainer}>
-    
-      <ScrollView style={styles.scrollView}> 
-        <View style={styles.container}>
+    <View style={styles.container}>
+      <Text style={styles.header}>Animated Gradient List</Text>
 
-          <View style={styles.LottieContainer}>
-            <LottieView
-              source={require('./assets/src/shoppingCart.json')}
-              autoPlay
-              loop
-              style={styles.lootie}
-            />
-          </View>
-
-          <View style={styles.imagecon}>
-            <Animated.Text
-              style={[
-                styles.text,
-                { transform: [{ scale: scaleAnim }] },
-              ]}
-            >
-              Design your Gift
-            </Animated.Text>
-            <Animated.Image
-              source={images[index]}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
-          
-          <View style={{ padding: 20 }}>
-            {loading ? (
-              <ActivityIndicator size="large" />
-            ) : (
-              data.slice(0, 2).map(item => (
-                <View
-                  key={item.id}
-                  style={styles.dataItem}
-                >
-                  <Text style={{ fontWeight: 'bold', color: '#333' }}>Name: {item.name}</Text>
-                  <Text style={{ color: '#555' }}> Username: {item.username}</Text>
-                  <Text style={{ color: '#777' }}> Email: {item.email}</Text>
-                </View>
-              ))
-            )}
-                 
-          </View>
-
-        </View>
-      </ScrollView>
-
-    <Modal 
-  visible={isModalVisible}
-  swipeDirection={['down']}
-  swipeThreshold={150}
- animationDuration = {200}
-  onSwipeOut={() => setIsModalVisible(false)}
-  modalAnimation={new SlideAnimation({ slideFrom: 'bottom' })}
->
-  <View style={{  paddingHorizontal: 20, alignItems: 'center' , width:"100%", height:600 }}>
-    
-    <Text>You are on Modal</Text>
-  </View>
-</Modal>
-<ModalPortal/>
-
+      <FlatList
+        data={DATA}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        showsVerticalScrollIndicator={false}
+        columnWrapperStyle={{
+          gap: 10,
+          marginBottom: 15,
+        }}
+        renderItem={({ item, index }) => (
+          <Animated.View
+            entering={ZoomIn.duration(3000).easing(Easing.out(Easing.exp)).delay(index * 300)}
+            exiting={ZoomOut.duration(1500).easing(Easing.in(Easing.exp))}
+          >
+            <TouchableOpacity onPress={() => navigation.navigate('Detail', { item })} activeOpacity={0.9}>
+              <LinearGradient
+                colors={item.colors?.length? item.colors : ['#555', '#333']} 
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.item, getItemStyle(index)]}
+              >
+                <Text style={styles.title}>{item.title}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+      />
     </View>
+  );
+};
+
+
+const DetailScreen = ({ route }: any) => {
+  const { item } = route.params;
+
+  const rotate = useSharedValue(0);
+  const scale = useSharedValue(0.96);
+
+  React.useEffect(() => {
+    // smooth rotation (no spring oscillation)
+    rotate.value = withTiming(360, {
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
+    });
+
+    // smooth scale "pop" without strong bounce
+    scale.value = withTiming(1, {
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotate.value}deg` }, { scale: scale.value }],
+    };
+  });
+
+  return (
+    <Animated.View
+      style={[styles.container]}
+      entering={FadeInDown.duration(250)}
+      exiting={FadeOutLeft}
+    >
+      <Animated.Image
+        style={[{ width: '100%', height: 300, marginTop: 20 }, animatedStyle]}
+        source={{
+          uri: 'https://pkgiftshop.com/user_files/product_images/1630329371-HTpLRm.jpg',
+        }}
+      />
+      <Text style={styles.header}>{item.title}</Text>
+      <Text style={styles.desc}>{item.description}</Text>
+    </Animated.View>
+  );
+};
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="List" component={ListScreen} />
+        <Stack.Screen name="Detail" component={DetailScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  // New style for the outermost container
-  appContainer: {
-    flex: 1, 
-    backgroundColor: '#fff', 
-  },
-  scrollView: {
-    flex: 1,
-  },
   container: {
-    alignItems: 'center',
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
   },
-  LottieContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 300,
-    height: 300,
+  header: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  lootie: {
-    width: 150,
-    height: 150,
-  },
-  imagecon: {
-    backgroundColor: 'aqua',
-    width: '90%',
-    height: 150,
-    flexDirection: 'row',
-    borderRadius: 50,
-    alignItems: 'center',
-    overflow: 'hidden',
-    elevation: 8
-  },
-  image: {
-    width: 125,
-    height: 125,
-    position: 'absolute',
-    right: 25,
-  },
-  text: {
-    color: 'red',
-    fontSize: 25,
-    marginLeft: 30,
-    fontWeight: 'bold',
-  },
-  dataItem: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 10,
+  item: {
+    padding: 16,
+    backgroundColor: '#f2f2f2',
+    borderRadius: 12,
     marginBottom: 10,
-    width: 300, 
+
   },
- 
-
-  modalContainer: {
-    height:600,
-    width:"100%",
-    marginTop: 20, 
-    marginLeft: 20, 
-    backgroundColor: 'white',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    flexDirection: 'column', 
+  title: {
+    fontSize: 18,
   },
-
-
+  desc: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
+    color: '#555',
+  },
 });
+ 
